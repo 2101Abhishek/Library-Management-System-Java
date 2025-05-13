@@ -1,0 +1,172 @@
+package com.library.main;
+
+import com.library.models.Book;
+import com.library.models.EBook;
+import com.library.models.PrintedBook;
+import com.library.services.LibraryService;
+import com.library.exceptions.BookNotFoundException;
+import com.library.exceptions.DuplicateBookException;
+import java.util.List;
+import java.util.Scanner;
+
+public class LibraryApp {
+    private static LibraryService libraryService = new LibraryService();
+    private static Scanner scanner = new Scanner(System.in);
+    
+    public static void main(String[] args) {
+        boolean running = true;
+        
+        while (running) {
+            System.out.println("\nLibrary Management System");
+            System.out.println("1. Add a new book");
+            System.out.println("2. Remove a book");
+            System.out.println("3. Search books by title");
+            System.out.println("4. Search books by author");
+            System.out.println("5. Display all books");
+            System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
+            
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+            
+            switch (choice) {
+                case 1:
+                    addBook();
+                    break;
+                case 2:
+                    removeBook();
+                    break;
+                case 3:
+                    searchByTitle();
+                    break;
+                case 4:
+                    searchByAuthor();
+                    break;
+                case 5:
+                    displayAllBooks();
+                    break;
+                case 6:
+                    running = false;
+                    System.out.println("Exiting Library Management System. Goodbye!");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+        
+        scanner.close();
+    }
+    
+    private static void addBook() {
+        System.out.println("\nAdd a new book");
+        System.out.println("1. E-Book");
+        System.out.println("2. Printed Book");
+        System.out.print("Enter book type: ");
+        int type = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        
+        System.out.print("Enter title: ");
+        String title = scanner.nextLine();
+        
+        System.out.print("Enter author: ");
+        String author = scanner.nextLine();
+        
+        System.out.print("Enter ISBN: ");
+        String isbn = scanner.nextLine();
+        
+        try {
+            if (type == 1) {
+                System.out.print("Enter download link: ");
+                String downloadLink = scanner.nextLine();
+                
+                System.out.print("Enter format (PDF/EPUB/etc): ");
+                String format = scanner.nextLine();
+                
+                EBook eBook = new EBook(title, author, isbn, downloadLink, format);
+                libraryService.addBook(eBook);
+            } else if (type == 2) {
+                System.out.print("Enter number of pages: ");
+                int pages = scanner.nextInt();
+                
+                System.out.print("Enter weight (in grams): ");
+                double weight = scanner.nextDouble();
+                scanner.nextLine(); // Consume newline
+                
+                PrintedBook printedBook = new PrintedBook(title, author, isbn, pages, weight);
+                libraryService.addBook(printedBook);
+            } else {
+                System.out.println("Invalid book type.");
+                return;
+            }
+            
+            System.out.println("Book added successfully!");
+        } catch (DuplicateBookException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+    
+    private static void removeBook() {
+        System.out.print("\nEnter ISBN of the book to remove: ");
+        String isbn = scanner.nextLine();
+        
+        try {
+            libraryService.removeBook(isbn);
+            System.out.println("Book removed successfully!");
+        } catch (BookNotFoundException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+    
+    private static void searchByTitle() {
+        System.out.print("\nEnter title to search: ");
+        String title = scanner.nextLine();
+        
+        List<Book> books = libraryService.searchByTitle(title);
+        displayBooks(books);
+    }
+    
+    private static void searchByAuthor() {
+        System.out.print("\nEnter author to search: ");
+        String author = scanner.nextLine();
+        
+        List<Book> books = libraryService.searchByAuthor(author);
+        displayBooks(books);
+    }
+    
+    private static void displayBooks(List<Book> books) {
+        if (books.isEmpty()) {
+            System.out.println("No books found.");
+        } else {
+            System.out.println("\nBooks found:");
+            for (Book book : books) {
+                System.out.println("Title: " + book.getTitle());
+                System.out.println("Author: " + book.getAuthor());
+                System.out.println("ISBN: " + book.getIsbn());
+                System.out.println("Type: " + book.getBookType());
+                
+                if (book instanceof EBook) {
+                    EBook eBook = (EBook) book;
+                    System.out.println("Format: " + eBook.getFormat());
+                    System.out.println("Download Link: " + eBook.getDownloadLink());
+                } else if (book instanceof PrintedBook) {
+                    PrintedBook printedBook = (PrintedBook) book;
+                    System.out.println("Pages: " + printedBook.getNumberOfPages());
+                    System.out.println("Weight: " + printedBook.getWeight() + "g");
+                }
+                
+                System.out.println("----------------------------------");
+            }
+        }
+    }
+    
+    private static void displayBooks(List<Book> books) {
+        if (books.isEmpty()) {
+            System.out.println("No books found.");
+        } else {
+            System.out.println("\nBooks found:");
+            for (Book book : books) {
+                System.out.println(book);
+            }
+        }
+    }
+}
